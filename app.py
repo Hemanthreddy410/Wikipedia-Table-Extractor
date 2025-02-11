@@ -12,7 +12,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 def sanitize_filename(name):
     """Remove invalid characters from filenames."""
-    return re.sub(r'[<>:"/\\|?*]', '', name).replace(' ', '_')
+    return re.sub(r'[<>:"/\\|?*]', '', name).replace(' ', '_') 
 
 def clean_text(text):
     """Remove [note] and [number] references from extracted text."""
