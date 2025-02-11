@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wikipedia Table Scraper</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container mt-5">
+        <h2 class="mb-4 text-center">Wikipedia Table Scraper</h2>
+        
+        <form method="POST" class="mb-4">
+            <label for="urls">Enter Wikipedia Page URLs (one per line):</label>
+            <textarea name="urls" id="urls" class="form-control mb-3" placeholder="https://en.wikipedia.org/wiki/Example"></textarea>
+            <button type="submit" class="btn btn-primary">Scrape Tables</button>
+        </form>
+
+        {% if error %}
+            <div class="alert alert-danger mt-3">{{ error }}</div>
+        {% endif %}
+
+        {% if tables %}
+            <h3 class="mt-4 text-center">Extracted Tables</h3>
+
+            <form id="download-form">
+                {% for table in tables %}
+                    <div class="table-container">
+                        <h4 class="text-primary text-center">{{ table.title }}</h4>
+                        <div class="table-responsive">
+                            {{ table.table_html | safe }}
+                        </div>
+
+                        <!-- Checkbox at Bottom -->
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <div class="form-check">
+                                <input type="checkbox" name="selected_tables" value="{{ table.download_link }}" class="form-check-input checkbox-large">
+                                <label class="form-check-label">Select Table</label>
+                            </div>
+                            <a href="{{ url_for('download_csv', filename=table.download_link) }}" class="btn btn-secondary">Download</a>
+                        </div>
+                    </div>
+                {% endfor %}
+                
+                <!-- Download Buttons -->
+                <div class="text-center mt-4">
+                    <button type="button" class="btn btn-success" onclick="downloadSelected()">Download Selected</button>
+                    <a href="{{ url_for('download_all') }}" class="btn btn-primary">Download All</a>
+                </div>
+            </form>
+        {% endif %}
+    </div>
+
+    <script>
+        function downloadSelected() {
+            const selectedTables = [];
+            document.querySelectorAll('input[name="selected_tables"]:checked').forEach(checkbox => {
+                selectedTables.push(checkbox.value);
+            });
+
+            fetch("/download_selected", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ selected_tables: selectedTables })
+            }).then(response => response.blob()).then(blob => {
+                const a = document.createElement("a");
+                a.href = URL.createObjectURL(blob);
+                a.download = "selected_data.csv";
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            });
+        }
+    </script>
+</body>
+</html>
